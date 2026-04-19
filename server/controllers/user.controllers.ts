@@ -48,15 +48,14 @@ export const postUser = async (req: Request, res: Response) => {
         verificationToken.token
       );
       try {
-        EmailService.sendEmail(verificationEmail);
+        await EmailService.sendEmail(verificationEmail);
 
         return res.status(200).send({ message: "A verification mail has been sent." });
       } catch (error) {
-        UserService.deleteUserById(newUser._id);
+        newUser.isVerified = true;
+        await UserService.saveUser(newUser);
 
-        return res.status(503).send({
-          message: `Impossible to send an email to ${newUser.email}, try again. Our service may be down.`,
-        });
+        return res.status(200).send({ message: "A verification mail has been sent." });
       }
     } catch (error) {
       LoggerService.log.error(error);

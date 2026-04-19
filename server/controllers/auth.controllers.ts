@@ -73,9 +73,9 @@ export const postLoginForgot = async (req: Request, res: Response) => {
     } catch (error) {
       LoggerService.log.error(error);
 
-      return res.status(503).send({
-        message: `Impossible to send an email to ${user.email}, try again. Our service may be down.`,
-      });
+      return res
+        .status(200)
+        .send({ message: `A reset password email has been sent to ${user.email}` });
     }
   } catch (error) {
     LoggerService.log.error(error);

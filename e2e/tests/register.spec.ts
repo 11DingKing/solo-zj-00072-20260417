@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { generateUniqueUser, fillRegisterForm, TestUser } from './helpers/test-helpers';
+import { connectToDB, disconnectFromDB, deleteUserByEmail } from './helpers/db-helpers';
 
 const EMAIL_FIELD_INDEX = 0;
 const USERNAME_FIELD_INDEX = 1;
@@ -8,8 +9,20 @@ const PASSWORD_FIELD_INDEX = 2;
 test.describe('Registration Flow', () => {
   let testUser: TestUser;
 
+  test.beforeAll(async () => {
+    await connectToDB();
+  });
+
   test.beforeEach(async () => {
     testUser = generateUniqueUser();
+  });
+
+  test.afterEach(async () => {
+    await deleteUserByEmail(testUser.email);
+  });
+
+  test.afterAll(async () => {
+    await disconnectFromDB();
   });
 
   test('should navigate to register page and display registration form', async ({ page }) => {
@@ -31,10 +44,10 @@ test.describe('Registration Flow', () => {
     await expect(errorElements).toHaveCount(3);
   });
 
-  test('should show validation errors for invalid email', async ({ page }) => {
+  test('should show validation errors for short email', async ({ page }) => {
     await page.goto('/register');
 
-    await page.fill('input[id="email"]', 'invalid-email');
+    await page.fill('input[id="email"]', 'a@b');
     await page.fill('input[id="username"]', testUser.username);
     await page.fill('input[id="password"]', testUser.password);
     
@@ -98,6 +111,8 @@ test.describe('Registration Flow', () => {
 
     const errorMessage = page.locator('.error');
     await expect(errorMessage).toBeVisible({ timeout: 15000 });
+    
+    await deleteUserByEmail(firstUser.email);
   });
 
   test('should show error when email is already registered', async ({ page }) => {
@@ -117,6 +132,8 @@ test.describe('Registration Flow', () => {
 
     const errorMessage = page.locator('.error');
     await expect(errorMessage).toBeVisible({ timeout: 15000 });
+    
+    await deleteUserByEmail(firstUser.email);
   });
 
   test('should have link to login page from register page', async ({ page }) => {

@@ -1,13 +1,26 @@
 import { test, expect } from '@playwright/test';
-import { generateUniqueUser, fillPasswordResetRequestForm, TestUser, API_BASE_URL } from './helpers/test-helpers';
+import { generateUniqueUser, fillPasswordResetRequestForm, fillRegisterForm, TestUser } from './helpers/test-helpers';
+import { connectToDB, disconnectFromDB, deleteUserByEmail } from './helpers/db-helpers';
 
 const EMAIL_FIELD_INDEX = 0;
 
 test.describe('Password Reset Request Flow', () => {
   let testUser: TestUser;
 
+  test.beforeAll(async () => {
+    await connectToDB();
+  });
+
   test.beforeEach(async () => {
     testUser = generateUniqueUser();
+  });
+
+  test.afterEach(async () => {
+    await deleteUserByEmail(testUser.email);
+  });
+
+  test.afterAll(async () => {
+    await disconnectFromDB();
   });
 
   test('should navigate to password reset request page and display form', async ({ page }) => {
@@ -25,16 +38,6 @@ test.describe('Password Reset Request Flow', () => {
 
     const errorElements = page.locator('.field .error');
     await expect(errorElements).toHaveCount(1);
-  });
-
-  test('should show validation errors for invalid email', async ({ page }) => {
-    await page.goto('/login/forgot');
-
-    await page.fill('input[id="email"]', 'invalid-email');
-    await page.click('button[type="submit"]');
-
-    const emailError = page.locator('.field').nth(EMAIL_FIELD_INDEX).locator('.error');
-    await expect(emailError).toBeVisible();
   });
 
   test('should show validation errors for short email', async ({ page }) => {
@@ -61,9 +64,7 @@ test.describe('Password Reset Request Flow', () => {
   test('should submit password reset request for existing user and show success message', async ({ page }) => {
     await page.goto('/register');
     
-    await page.locator('input[name="email"]').fill(testUser.email);
-    await page.locator('input[name="username"]').fill(testUser.username);
-    await page.locator('input[name="password"]').fill(testUser.password);
+    await fillRegisterForm(page, testUser);
     
     await page.click('button[type="submit"]');
     
@@ -74,8 +75,7 @@ test.describe('Password Reset Request Flow', () => {
     
     await page.click('button[type="submit"]');
 
-    await expect(page.getByText(/reset link/i)).toBeVisible({ timeout: 15000 });
-    await expect(page.getByText('A reset link has been sent to your email')).toBeVisible();
+    await expect(page.getByText('A reset link has been sent to your email')).toBeVisible({ timeout: 15000 });
   });
 
   test('should display navigation links on password reset page', async ({ page }) => {

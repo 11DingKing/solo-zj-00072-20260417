@@ -49,36 +49,29 @@ export async function navigateToPage(page: Page, path: string): Promise<void> {
   await page.goto(`${FRONTEND_BASE_URL}${path}`);
 }
 
-async function fillInput(page: Page, selector: string, value: string): Promise<void> {
-  const input = page.locator(selector);
-  await input.click();
-  await input.fill(value);
-  await input.blur();
-}
-
 export async function fillLoginForm(
   page: Page,
   username: string,
   password: string
 ): Promise<void> {
-  await fillInput(page, 'input[name="username"]', username);
-  await fillInput(page, 'input[name="password"]', password);
+  await page.fill('input[id="username"]', username);
+  await page.fill('input[id="password"]', password);
 }
 
 export async function fillRegisterForm(
   page: Page,
   user: TestUser
 ): Promise<void> {
-  await fillInput(page, 'input[name="email"]', user.email);
-  await fillInput(page, 'input[name="username"]', user.username);
-  await fillInput(page, 'input[name="password"]', user.password);
+  await page.fill('input[id="email"]', user.email);
+  await page.fill('input[id="username"]', user.username);
+  await page.fill('input[id="password"]', user.password);
 }
 
 export async function fillPasswordResetRequestForm(
   page: Page,
   email: string
 ): Promise<void> {
-  await fillInput(page, 'input[name="email"]', email);
+  await page.fill('input[id="email"]', email);
 }
 
 export async function isLoggedIn(page: Page): Promise<boolean> {

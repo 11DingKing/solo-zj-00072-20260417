@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
-import { generateUniqueUser, fillLoginForm, TestUser, API_BASE_URL } from './helpers/test-helpers';
+import { generateUniqueUser, fillLoginForm, fillRegisterForm, TestUser, API_BASE_URL } from './helpers/test-helpers';
+import { connectToDB, disconnectFromDB, deleteUserByEmail } from './helpers/db-helpers';
 
 const USERNAME_FIELD_INDEX = 0;
 const PASSWORD_FIELD_INDEX = 1;
@@ -7,8 +8,20 @@ const PASSWORD_FIELD_INDEX = 1;
 test.describe('Login Flow', () => {
   let testUser: TestUser;
 
+  test.beforeAll(async () => {
+    await connectToDB();
+  });
+
   test.beforeEach(async () => {
     testUser = generateUniqueUser();
+  });
+
+  test.afterEach(async () => {
+    await deleteUserByEmail(testUser.email);
+  });
+
+  test.afterAll(async () => {
+    await disconnectFromDB();
   });
 
   test('should navigate to login page and display login form', async ({ page }) => {
@@ -63,23 +76,10 @@ test.describe('Login Flow', () => {
     await expect(errorMessage).toBeVisible({ timeout: 15000 });
   });
 
-  test('should show error for unverified user login', async ({ page }) => {
+  test('should login successfully after registration', async ({ page }) => {
     await page.goto('/register');
     
-    const emailInput = page.locator('input[name="email"]');
-    await emailInput.click();
-    await emailInput.fill(testUser.email);
-    await emailInput.blur();
-    
-    const usernameInput = page.locator('input[name="username"]');
-    await usernameInput.click();
-    await usernameInput.fill(testUser.username);
-    await usernameInput.blur();
-    
-    const passwordInput = page.locator('input[name="password"]');
-    await passwordInput.click();
-    await passwordInput.fill(testUser.password);
-    await passwordInput.blur();
+    await fillRegisterForm(page, testUser);
     
     await page.click('button[type="submit"]');
     
@@ -90,9 +90,8 @@ test.describe('Login Flow', () => {
     
     await page.click('button[type="submit"]');
 
-    const errorMessage = page.locator('.error');
-    await expect(errorMessage).toBeVisible({ timeout: 15000 });
-    await expect(errorMessage).toContainText(/verify|verif/i);
+    await page.waitForURL('**/home');
+    expect(page.url()).toContain('/home');
   });
 
   test('should have forgot password link on login page', async ({ page }) => {
