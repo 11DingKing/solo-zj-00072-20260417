@@ -2,7 +2,7 @@ services:
   mongo:
     image: mongo:latest
     ports:
-      - "20717:20717"
+      - "20717:27017"
     volumes:
       - /data/db # Create a volume for the DB.
   client:
