@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { generateUniqueUser, fillPasswordResetRequestForm, FRONTEND_BASE_URL, TestUser, API_BASE_URL } from './helpers/test-helpers';
+import { generateUniqueUser, fillPasswordResetRequestForm, TestUser, API_BASE_URL } from './helpers/test-helpers';
 
 test.describe('Password Reset Request Flow', () => {
   let testUser: TestUser;
@@ -9,7 +9,7 @@ test.describe('Password Reset Request Flow', () => {
   });
 
   test('should navigate to password reset request page and display form', async ({ page }) => {
-    await page.goto(`${FRONTEND_BASE_URL}/login/forgot`);
+    await page.goto('/login/forgot');
 
     await expect(page.locator('input[id="email"]')).toBeVisible();
     await expect(page.locator('button[type="submit"]')).toBeVisible();
@@ -17,7 +17,7 @@ test.describe('Password Reset Request Flow', () => {
   });
 
   test('should show validation errors for empty email submission', async ({ page }) => {
-    await page.goto(`${FRONTEND_BASE_URL}/login/forgot`);
+    await page.goto('/login/forgot');
 
     await page.click('button[type="submit"]');
 
@@ -25,7 +25,7 @@ test.describe('Password Reset Request Flow', () => {
   });
 
   test('should show validation errors for invalid email', async ({ page }) => {
-    await page.goto(`${FRONTEND_BASE_URL}/login/forgot`);
+    await page.goto('/login/forgot');
 
     await page.fill('input[id="email"]', 'invalid-email');
     await page.click('button[type="submit"]');
@@ -35,7 +35,7 @@ test.describe('Password Reset Request Flow', () => {
   });
 
   test('should show validation errors for short email', async ({ page }) => {
-    await page.goto(`${FRONTEND_BASE_URL}/login/forgot`);
+    await page.goto('/login/forgot');
 
     await page.fill('input[id="email"]', 'a@b');
     await page.click('button[type="submit"]');
@@ -45,7 +45,7 @@ test.describe('Password Reset Request Flow', () => {
   });
 
   test('should show error for non-existent email', async ({ page }) => {
-    await page.goto(`${FRONTEND_BASE_URL}/login/forgot`);
+    await page.goto('/login/forgot');
 
     await fillPasswordResetRequestForm(page, testUser.email);
     await page.click('button[type="submit"]');
@@ -66,7 +66,7 @@ test.describe('Password Reset Request Flow', () => {
     });
     expect(response.ok()).toBeTruthy();
 
-    await page.goto(`${FRONTEND_BASE_URL}/login/forgot`);
+    await page.goto('/login/forgot');
     await fillPasswordResetRequestForm(page, testUser.email);
     await page.click('button[type="submit"]');
 
@@ -76,7 +76,7 @@ test.describe('Password Reset Request Flow', () => {
   });
 
   test('should display navigation links on password reset page', async ({ page }) => {
-    await page.goto(`${FRONTEND_BASE_URL}/login/forgot`);
+    await page.goto('/login/forgot');
 
     const homeLink = page.locator('nav a:text("Home")');
     await expect(homeLink).toBeVisible();
@@ -89,7 +89,7 @@ test.describe('Password Reset Request Flow', () => {
   });
 
   test('should navigate back to login page from navigation', async ({ page }) => {
-    await page.goto(`${FRONTEND_BASE_URL}/login/forgot`);
+    await page.goto('/login/forgot');
 
     await page.click('nav a:text("Login")');
 

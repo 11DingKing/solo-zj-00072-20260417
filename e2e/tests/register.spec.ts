@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { generateUniqueUser, fillRegisterForm, FRONTEND_BASE_URL, TestUser } from './helpers/test-helpers';
+import { generateUniqueUser, fillRegisterForm, TestUser } from './helpers/test-helpers';
 
 test.describe('Registration Flow', () => {
   let testUser: TestUser;
@@ -9,7 +9,7 @@ test.describe('Registration Flow', () => {
   });
 
   test('should navigate to register page and display registration form', async ({ page }) => {
-    await page.goto(`${FRONTEND_BASE_URL}/register`);
+    await page.goto('/register');
 
     await expect(page.locator('input[id="email"]')).toBeVisible();
     await expect(page.locator('input[id="username"]')).toBeVisible();
@@ -19,7 +19,7 @@ test.describe('Registration Flow', () => {
   });
 
   test('should show validation errors for empty form submission', async ({ page }) => {
-    await page.goto(`${FRONTEND_BASE_URL}/register`);
+    await page.goto('/register');
 
     await page.click('button[type="submit"]');
 
@@ -27,7 +27,7 @@ test.describe('Registration Flow', () => {
   });
 
   test('should show validation errors for invalid email', async ({ page }) => {
-    await page.goto(`${FRONTEND_BASE_URL}/register`);
+    await page.goto('/register');
 
     await page.fill('input[id="email"]', 'invalid-email');
     await page.fill('input[id="username"]', testUser.username);
@@ -40,7 +40,7 @@ test.describe('Registration Flow', () => {
   });
 
   test('should show validation errors for short username', async ({ page }) => {
-    await page.goto(`${FRONTEND_BASE_URL}/register`);
+    await page.goto('/register');
 
     await page.fill('input[id="email"]', testUser.email);
     await page.fill('input[id="username"]', 'ab');
@@ -53,7 +53,7 @@ test.describe('Registration Flow', () => {
   });
 
   test('should show validation errors for short password', async ({ page }) => {
-    await page.goto(`${FRONTEND_BASE_URL}/register`);
+    await page.goto('/register');
 
     await page.fill('input[id="email"]', testUser.email);
     await page.fill('input[id="username"]', testUser.username);
@@ -66,7 +66,7 @@ test.describe('Registration Flow', () => {
   });
 
   test('should submit registration form and show verification email message', async ({ page }) => {
-    await page.goto(`${FRONTEND_BASE_URL}/register`);
+    await page.goto('/register');
 
     await fillRegisterForm(page, testUser);
 
@@ -78,10 +78,10 @@ test.describe('Registration Flow', () => {
     await expect(page.getByText(testUser.email)).toBeVisible();
   });
 
-  test('should show error when username is already taken', async ({ page, request }) => {
+  test('should show error when username is already taken', async ({ page }) => {
     const firstUser = generateUniqueUser();
     
-    await page.goto(`${FRONTEND_BASE_URL}/register`);
+    await page.goto('/register');
     await fillRegisterForm(page, firstUser);
     await page.click('button[type="submit"]');
     await page.waitForSelector('text=verification email', { timeout: 10000 });
@@ -89,7 +89,7 @@ test.describe('Registration Flow', () => {
     const secondUser = generateUniqueUser();
     secondUser.username = firstUser.username;
 
-    await page.goto(`${FRONTEND_BASE_URL}/register`);
+    await page.goto('/register');
     await fillRegisterForm(page, secondUser);
     await page.click('button[type="submit"]');
 
@@ -102,7 +102,7 @@ test.describe('Registration Flow', () => {
   test('should show error when email is already registered', async ({ page }) => {
     const firstUser = generateUniqueUser();
     
-    await page.goto(`${FRONTEND_BASE_URL}/register`);
+    await page.goto('/register');
     await fillRegisterForm(page, firstUser);
     await page.click('button[type="submit"]');
     await page.waitForSelector('text=verification email', { timeout: 10000 });
@@ -110,7 +110,7 @@ test.describe('Registration Flow', () => {
     const secondUser = generateUniqueUser();
     secondUser.email = firstUser.email;
 
-    await page.goto(`${FRONTEND_BASE_URL}/register`);
+    await page.goto('/register');
     await fillRegisterForm(page, secondUser);
     await page.click('button[type="submit"]');
 
@@ -121,7 +121,7 @@ test.describe('Registration Flow', () => {
   });
 
   test('should have link to login page from register page', async ({ page }) => {
-    await page.goto(`${FRONTEND_BASE_URL}/register`);
+    await page.goto('/register');
 
     const homeLink = page.locator('nav a:text("Home")');
     await expect(homeLink).toBeVisible();

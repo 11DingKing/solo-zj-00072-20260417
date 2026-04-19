@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { generateUniqueUser, fillLoginForm, FRONTEND_BASE_URL, TestUser, API_BASE_URL } from './helpers/test-helpers';
+import { generateUniqueUser, fillLoginForm, TestUser, API_BASE_URL } from './helpers/test-helpers';
 
 test.describe('Login Flow', () => {
   let testUser: TestUser;
@@ -9,7 +9,7 @@ test.describe('Login Flow', () => {
   });
 
   test('should navigate to login page and display login form', async ({ page }) => {
-    await page.goto(`${FRONTEND_BASE_URL}/login`);
+    await page.goto('/login');
 
     await expect(page.locator('input[id="username"]')).toBeVisible();
     await expect(page.locator('input[id="password"]')).toBeVisible();
@@ -18,7 +18,7 @@ test.describe('Login Flow', () => {
   });
 
   test('should show validation errors for empty form submission', async ({ page }) => {
-    await page.goto(`${FRONTEND_BASE_URL}/login`);
+    await page.goto('/login');
 
     await page.click('button[type="submit"]');
 
@@ -26,7 +26,7 @@ test.describe('Login Flow', () => {
   });
 
   test('should show validation errors for short username', async ({ page }) => {
-    await page.goto(`${FRONTEND_BASE_URL}/login`);
+    await page.goto('/login');
 
     await page.fill('input[id="username"]', 'ab');
     await page.fill('input[id="password"]', testUser.password);
@@ -38,7 +38,7 @@ test.describe('Login Flow', () => {
   });
 
   test('should show validation errors for short password', async ({ page }) => {
-    await page.goto(`${FRONTEND_BASE_URL}/login`);
+    await page.goto('/login');
 
     await page.fill('input[id="username"]', testUser.username);
     await page.fill('input[id="password"]', '123');
@@ -50,7 +50,7 @@ test.describe('Login Flow', () => {
   });
 
   test('should show error for non-existent user', async ({ page }) => {
-    await page.goto(`${FRONTEND_BASE_URL}/login`);
+    await page.goto('/login');
 
     await fillLoginForm(page, testUser.username, testUser.password);
     await page.click('button[type="submit"]');
@@ -71,7 +71,7 @@ test.describe('Login Flow', () => {
     });
     expect(response.ok()).toBeTruthy();
 
-    await page.goto(`${FRONTEND_BASE_URL}/login`);
+    await page.goto('/login');
     await fillLoginForm(page, testUser.username, testUser.password);
     await page.click('button[type="submit"]');
 
@@ -83,14 +83,14 @@ test.describe('Login Flow', () => {
   });
 
   test('should have forgot password link on login page', async ({ page }) => {
-    await page.goto(`${FRONTEND_BASE_URL}/login`);
+    await page.goto('/login');
 
     const forgotPasswordLink = page.locator('a:text("Forgot your password?")');
     await expect(forgotPasswordLink).toBeVisible();
   });
 
   test('should navigate to forgot password page when clicking link', async ({ page }) => {
-    await page.goto(`${FRONTEND_BASE_URL}/login`);
+    await page.goto('/login');
 
     await page.click('a:text("Forgot your password?")');
 
@@ -99,14 +99,14 @@ test.describe('Login Flow', () => {
   });
 
   test('should have sign up link on login page', async ({ page }) => {
-    await page.goto(`${FRONTEND_BASE_URL}/login`);
+    await page.goto('/login');
 
     const signUpLink = page.locator('a:text("Sign Up")');
     await expect(signUpLink).toBeVisible();
   });
 
   test('should navigate to register page when clicking sign up link', async ({ page }) => {
-    await page.goto(`${FRONTEND_BASE_URL}/login`);
+    await page.goto('/login');
 
     await page.click('a:text("Sign Up")');
 
@@ -115,7 +115,7 @@ test.describe('Login Flow', () => {
   });
 
   test('should display navigation links on login page', async ({ page }) => {
-    await page.goto(`${FRONTEND_BASE_URL}/login`);
+    await page.goto('/login');
 
     const homeLink = page.locator('nav a:text("Home")');
     await expect(homeLink).toBeVisible();
