@@ -1,7 +1,7 @@
-import { Page, APIRequestContext } from '@playwright/test';
+import { Page, APIRequestContext, expect } from '@playwright/test';
 
-const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:8081/api';
-const FRONTEND_BASE_URL = process.env.FRONTEND_BASE_URL || 'http://localhost:3000';
+export const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:8081/api';
+export const FRONTEND_BASE_URL = process.env.FRONTEND_BASE_URL || 'http://localhost:3000';
 
 export interface TestUser {
   username: string;
@@ -10,11 +10,11 @@ export interface TestUser {
 }
 
 export function generateUniqueUser(): TestUser {
-  const timestamp = Date.now();
+  const timestamp = Date.now().toString().slice(-6);
   return {
-    username: `testuser_${timestamp}`,
-    email: `testuser_${timestamp}@example.com`,
-    password: 'TestPass123!',
+    username: `user_${timestamp}`,
+    email: `user_${timestamp}@test.com`,
+    password: 'Test123!',
   };
 }
 
@@ -49,29 +49,36 @@ export async function navigateToPage(page: Page, path: string): Promise<void> {
   await page.goto(`${FRONTEND_BASE_URL}${path}`);
 }
 
+async function fillInput(page: Page, selector: string, value: string): Promise<void> {
+  const input = page.locator(selector);
+  await input.click();
+  await input.fill(value);
+  await input.blur();
+}
+
 export async function fillLoginForm(
   page: Page,
   username: string,
   password: string
 ): Promise<void> {
-  await page.fill('input[id="username"]', username);
-  await page.fill('input[id="password"]', password);
+  await fillInput(page, 'input[name="username"]', username);
+  await fillInput(page, 'input[name="password"]', password);
 }
 
 export async function fillRegisterForm(
   page: Page,
   user: TestUser
 ): Promise<void> {
-  await page.fill('input[id="email"]', user.email);
-  await page.fill('input[id="username"]', user.username);
-  await page.fill('input[id="password"]', user.password);
+  await fillInput(page, 'input[name="email"]', user.email);
+  await fillInput(page, 'input[name="username"]', user.username);
+  await fillInput(page, 'input[name="password"]', user.password);
 }
 
 export async function fillPasswordResetRequestForm(
   page: Page,
   email: string
 ): Promise<void> {
-  await page.fill('input[id="email"]', email);
+  await fillInput(page, 'input[name="email"]', email);
 }
 
 export async function isLoggedIn(page: Page): Promise<boolean> {
@@ -86,5 +93,3 @@ export async function waitForNavigationAndCheckURL(
   await page.waitForURL(`**${expectedPath}`);
   expect(page.url()).toContain(expectedPath);
 }
-
-export { API_BASE_URL, FRONTEND_BASE_URL };

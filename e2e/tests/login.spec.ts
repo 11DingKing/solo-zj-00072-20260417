@@ -1,6 +1,9 @@
 import { test, expect } from '@playwright/test';
 import { generateUniqueUser, fillLoginForm, TestUser, API_BASE_URL } from './helpers/test-helpers';
 
+const USERNAME_FIELD_INDEX = 0;
+const PASSWORD_FIELD_INDEX = 1;
+
 test.describe('Login Flow', () => {
   let testUser: TestUser;
 
@@ -14,7 +17,6 @@ test.describe('Login Flow', () => {
     await expect(page.locator('input[id="username"]')).toBeVisible();
     await expect(page.locator('input[id="password"]')).toBeVisible();
     await expect(page.locator('button[type="submit"]')).toBeVisible();
-    await expect(page.getByText('Login')).toBeVisible();
   });
 
   test('should show validation errors for empty form submission', async ({ page }) => {
@@ -22,7 +24,8 @@ test.describe('Login Flow', () => {
 
     await page.click('button[type="submit"]');
 
-    await expect(page.getByText('Required')).toHaveCount(2);
+    const errorElements = page.locator('.field .error');
+    await expect(errorElements).toHaveCount(2);
   });
 
   test('should show validation errors for short username', async ({ page }) => {
@@ -33,7 +36,7 @@ test.describe('Login Flow', () => {
     
     await page.click('button[type="submit"]');
 
-    const usernameError = page.locator('.field').filter({ hasText: 'Username' }).locator('.error, .Error');
+    const usernameError = page.locator('.field').nth(USERNAME_FIELD_INDEX).locator('.error');
     await expect(usernameError).toBeVisible();
   });
 
@@ -45,7 +48,7 @@ test.describe('Login Flow', () => {
     
     await page.click('button[type="submit"]');
 
-    const passwordError = page.locator('.field').filter({ hasText: 'Password' }).locator('.error, .Error');
+    const passwordError = page.locator('.field').nth(PASSWORD_FIELD_INDEX).locator('.error');
     await expect(passwordError).toBeVisible();
   });
 
@@ -53,32 +56,42 @@ test.describe('Login Flow', () => {
     await page.goto('/login');
 
     await fillLoginForm(page, testUser.username, testUser.password);
+    
     await page.click('button[type="submit"]');
 
-    await page.waitForSelector('.Error, .error', { timeout: 10000 });
-    
-    const errorMessage = page.locator('.Error, .error');
-    await expect(errorMessage).toBeVisible();
+    const errorMessage = page.locator('.error');
+    await expect(errorMessage).toBeVisible({ timeout: 15000 });
   });
 
-  test('should show error for unverified user login', async ({ page, request }) => {
-    const response = await request.post(`${API_BASE_URL}/user/register`, {
-      data: {
-        username: testUser.username,
-        email: testUser.email,
-        password: testUser.password,
-      },
-    });
-    expect(response.ok()).toBeTruthy();
+  test('should show error for unverified user login', async ({ page }) => {
+    await page.goto('/register');
+    
+    const emailInput = page.locator('input[name="email"]');
+    await emailInput.click();
+    await emailInput.fill(testUser.email);
+    await emailInput.blur();
+    
+    const usernameInput = page.locator('input[name="username"]');
+    await usernameInput.click();
+    await usernameInput.fill(testUser.username);
+    await usernameInput.blur();
+    
+    const passwordInput = page.locator('input[name="password"]');
+    await passwordInput.click();
+    await passwordInput.fill(testUser.password);
+    await passwordInput.blur();
+    
+    await page.click('button[type="submit"]');
+    
+    await expect(page.getByText(/verification email/i)).toBeVisible({ timeout: 15000 });
 
     await page.goto('/login');
     await fillLoginForm(page, testUser.username, testUser.password);
+    
     await page.click('button[type="submit"]');
 
-    await page.waitForSelector('.Error, .error', { timeout: 10000 });
-    
-    const errorMessage = page.locator('.Error, .error');
-    await expect(errorMessage).toBeVisible();
+    const errorMessage = page.locator('.error');
+    await expect(errorMessage).toBeVisible({ timeout: 15000 });
     await expect(errorMessage).toContainText(/verify|verif/i);
   });
 

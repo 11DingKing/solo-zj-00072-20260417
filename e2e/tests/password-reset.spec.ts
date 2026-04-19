@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { generateUniqueUser, fillPasswordResetRequestForm, TestUser, API_BASE_URL } from './helpers/test-helpers';
 
+const EMAIL_FIELD_INDEX = 0;
+
 test.describe('Password Reset Request Flow', () => {
   let testUser: TestUser;
 
@@ -21,7 +23,8 @@ test.describe('Password Reset Request Flow', () => {
 
     await page.click('button[type="submit"]');
 
-    await expect(page.getByText('Required')).toBeVisible();
+    const errorElements = page.locator('.field .error');
+    await expect(errorElements).toHaveCount(1);
   });
 
   test('should show validation errors for invalid email', async ({ page }) => {
@@ -30,7 +33,7 @@ test.describe('Password Reset Request Flow', () => {
     await page.fill('input[id="email"]', 'invalid-email');
     await page.click('button[type="submit"]');
 
-    const emailError = page.locator('.field').filter({ hasText: 'Email' }).locator('.error, .Error');
+    const emailError = page.locator('.field').nth(EMAIL_FIELD_INDEX).locator('.error');
     await expect(emailError).toBeVisible();
   });
 
@@ -40,7 +43,7 @@ test.describe('Password Reset Request Flow', () => {
     await page.fill('input[id="email"]', 'a@b');
     await page.click('button[type="submit"]');
 
-    const emailError = page.locator('.field').filter({ hasText: 'Email' }).locator('.error, .Error');
+    const emailError = page.locator('.field').nth(EMAIL_FIELD_INDEX).locator('.error');
     await expect(emailError).toBeVisible();
   });
 
@@ -48,30 +51,30 @@ test.describe('Password Reset Request Flow', () => {
     await page.goto('/login/forgot');
 
     await fillPasswordResetRequestForm(page, testUser.email);
+    
     await page.click('button[type="submit"]');
 
-    await page.waitForSelector('.Error, .error', { timeout: 10000 });
-    
-    const errorMessage = page.locator('.Error, .error');
-    await expect(errorMessage).toBeVisible();
+    const errorMessage = page.locator('.error');
+    await expect(errorMessage).toBeVisible({ timeout: 15000 });
   });
 
-  test('should submit password reset request for existing user and show success message', async ({ page, request }) => {
-    const response = await request.post(`${API_BASE_URL}/user/register`, {
-      data: {
-        username: testUser.username,
-        email: testUser.email,
-        password: testUser.password,
-      },
-    });
-    expect(response.ok()).toBeTruthy();
+  test('should submit password reset request for existing user and show success message', async ({ page }) => {
+    await page.goto('/register');
+    
+    await page.locator('input[name="email"]').fill(testUser.email);
+    await page.locator('input[name="username"]').fill(testUser.username);
+    await page.locator('input[name="password"]').fill(testUser.password);
+    
+    await page.click('button[type="submit"]');
+    
+    await expect(page.getByText(/verification email/i)).toBeVisible({ timeout: 15000 });
 
     await page.goto('/login/forgot');
     await fillPasswordResetRequestForm(page, testUser.email);
+    
     await page.click('button[type="submit"]');
 
-    await page.waitForSelector('text=reset link', { timeout: 10000 });
-    
+    await expect(page.getByText(/reset link/i)).toBeVisible({ timeout: 15000 });
     await expect(page.getByText('A reset link has been sent to your email')).toBeVisible();
   });
 

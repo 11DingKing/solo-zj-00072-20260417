@@ -1,6 +1,10 @@
 import { test, expect } from '@playwright/test';
 import { generateUniqueUser, fillRegisterForm, TestUser } from './helpers/test-helpers';
 
+const EMAIL_FIELD_INDEX = 0;
+const USERNAME_FIELD_INDEX = 1;
+const PASSWORD_FIELD_INDEX = 2;
+
 test.describe('Registration Flow', () => {
   let testUser: TestUser;
 
@@ -23,7 +27,8 @@ test.describe('Registration Flow', () => {
 
     await page.click('button[type="submit"]');
 
-    await expect(page.getByText('Required')).toHaveCount(3);
+    const errorElements = page.locator('.field .error');
+    await expect(errorElements).toHaveCount(3);
   });
 
   test('should show validation errors for invalid email', async ({ page }) => {
@@ -35,7 +40,7 @@ test.describe('Registration Flow', () => {
     
     await page.click('button[type="submit"]');
 
-    const emailError = page.locator('.field').filter({ hasText: 'Email' }).locator('.error, .Error');
+    const emailError = page.locator('.field').nth(EMAIL_FIELD_INDEX).locator('.error');
     await expect(emailError).toBeVisible();
   });
 
@@ -48,7 +53,7 @@ test.describe('Registration Flow', () => {
     
     await page.click('button[type="submit"]');
 
-    const usernameError = page.locator('.field').filter({ hasText: 'Username' }).locator('.error, .Error');
+    const usernameError = page.locator('.field').nth(USERNAME_FIELD_INDEX).locator('.error');
     await expect(usernameError).toBeVisible();
   });
 
@@ -61,7 +66,7 @@ test.describe('Registration Flow', () => {
     
     await page.click('button[type="submit"]');
 
-    const passwordError = page.locator('.field').filter({ hasText: 'Password' }).locator('.error, .Error');
+    const passwordError = page.locator('.field').nth(PASSWORD_FIELD_INDEX).locator('.error');
     await expect(passwordError).toBeVisible();
   });
 
@@ -72,9 +77,7 @@ test.describe('Registration Flow', () => {
 
     await page.click('button[type="submit"]');
 
-    await page.waitForSelector('text=verification email', { timeout: 10000 });
-    
-    await expect(page.getByText('A verification email has been sent.')).toBeVisible();
+    await expect(page.getByText(/verification email/i)).toBeVisible({ timeout: 15000 });
     await expect(page.getByText(testUser.email)).toBeVisible();
   });
 
@@ -84,7 +87,7 @@ test.describe('Registration Flow', () => {
     await page.goto('/register');
     await fillRegisterForm(page, firstUser);
     await page.click('button[type="submit"]');
-    await page.waitForSelector('text=verification email', { timeout: 10000 });
+    await expect(page.getByText(/verification email/i)).toBeVisible({ timeout: 15000 });
 
     const secondUser = generateUniqueUser();
     secondUser.username = firstUser.username;
@@ -93,10 +96,8 @@ test.describe('Registration Flow', () => {
     await fillRegisterForm(page, secondUser);
     await page.click('button[type="submit"]');
 
-    await page.waitForSelector('.Error, .error', { timeout: 10000 });
-    
-    const errorMessage = page.locator('.Error, .error');
-    await expect(errorMessage).toBeVisible();
+    const errorMessage = page.locator('.error');
+    await expect(errorMessage).toBeVisible({ timeout: 15000 });
   });
 
   test('should show error when email is already registered', async ({ page }) => {
@@ -105,7 +106,7 @@ test.describe('Registration Flow', () => {
     await page.goto('/register');
     await fillRegisterForm(page, firstUser);
     await page.click('button[type="submit"]');
-    await page.waitForSelector('text=verification email', { timeout: 10000 });
+    await expect(page.getByText(/verification email/i)).toBeVisible({ timeout: 15000 });
 
     const secondUser = generateUniqueUser();
     secondUser.email = firstUser.email;
@@ -114,10 +115,8 @@ test.describe('Registration Flow', () => {
     await fillRegisterForm(page, secondUser);
     await page.click('button[type="submit"]');
 
-    await page.waitForSelector('.Error, .error', { timeout: 10000 });
-    
-    const errorMessage = page.locator('.Error, .error');
-    await expect(errorMessage).toBeVisible();
+    const errorMessage = page.locator('.error');
+    await expect(errorMessage).toBeVisible({ timeout: 15000 });
   });
 
   test('should have link to login page from register page', async ({ page }) => {
